@@ -10,6 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 # Copy only what's needed
-COPY paved.py .
+COPY pavet.py .
 # Run the application
-CMD ["python", "./paved.py"]
+CMD ["python", "./pavet.py"]
