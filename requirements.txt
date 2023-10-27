@@ -1,0 +1,6 @@
+youtube-dl==2021.12.17
+SpeechRecognition==3.10.0
+pydub==0.25.1  # Substitute with the latest version
+moviepy==1.0.3
+yt_dlp==2023.10.13
+pocketsphinx==5.0.2
