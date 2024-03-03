@@ -1,4 +1,4 @@
-# Pavet - Python Audio Video Text Extractor (in Docker)
+# Paved - Python Audio Video Text Extractor (in Docker)
 
 ## Features
 
@@ -15,10 +15,10 @@
 
 ## Directory Structure
 
-pavet/  
+paved/  
 ├── Dockerfile: Defines the Docker container and its dependencies.  
 ├── docker-compose.yml: Docker Compose configuration file.  
-├── pavet.py: Main Python script for video downloading and transcription.  
+├── paved.py: Main Python script for video downloading and transcription.  
 ├── data/: Directory for storing downloaded or converted audio files.  
 └── README.md: This documentation.  
 
@@ -26,8 +26,8 @@ pavet/
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/williamblair333/pavet.git
-    cd pavet
+    git clone https://github.com/williamblair333/paved.git
+    cd paved
     ```
 
 2. **Build and start the Docker container**:
@@ -39,17 +39,17 @@ pavet/
 
 - For online mode:
     ```bash
-    docker-compose exec <container_name> python pavet.py -m online -p 'https://youtube.com/watch?v=example'
+    docker-compose exec <container_name> python paved.py -m online -p 'https://youtube.com/watch?v=example'
     ```
   
 - For offline mode:
     ```bash
-    docker-compose exec <container_name> python pavet.py -m offline -p '/path/to/local/audio.wav'
+    docker-compose exec <container_name> python paved.py -m offline -p '/path/to/local/audio.wav'
     ```
 
 - To save text to a custom directory and suppress console output:
     ```bash
-    docker-compose exec <container_name> python pavet.py -m online -p 'https://youtube.com/watch?v=example' --output '/custom/output/file.txt' --print-console false
+    docker-compose exec <container_name> python paved.py -m online -p 'https://youtube.com/watch?v=example' --output '/custom/output/file.txt' --print-console false
     ```
 
 ## 4. **Output**
@@ -71,7 +71,7 @@ Use the following command-line arguments for flexible operation:
 ### For example:
 
 ```bash
-python pavet.py -m online -p 'https://youtube.com/watch?v=example' --output '/custom/output/file.txt' --print-console false
+python paved.py -m online -p 'https://youtube.com/watch?v=example' --output '/custom/output/file.txt' --print-console false
 
 ## TODO
 
