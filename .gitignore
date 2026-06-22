@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Local venvs / ffmpeg
+.venv/
+.ffvenv/
+
+# Media + work artifacts (don't commit videos or outputs)
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.wav
+*.mp3
+data/*
+!data/.gitkeep
+data/output/*
+!data/output/.gitkeep
+local_files/*
+!local_files/.gitkeep

@@ -1,82 +1,99 @@
-# Paved - Python Audio Video Text Extractor (in Docker)
+# PAVED — Video Repair & Transcription Toolkit
 
-## Features
+A Dockerized, **offline-first** command-line toolkit for video files:
 
-- Extracts audio from online video platforms like YouTube, Vimeo, and Rumble.
-- Transcribes extracted audio as well as local audio and video files.
-- Supports multiple audio formats including MP3, MP4, and WAV.
-- Running on Python 3.9 with dependencies managed by Docker.
+- **repair** — diagnose and salvage broken / unplayable video containers
+  (the origin: a Clipchamp export that wrote a valid index but left the `mdat`
+  box header zeroed and the opening media as an unflushed hole).
+- **transcribe** — speech-to-text with **multiple swappable local engines**
+  (faster-whisper, whisper.cpp, Vosk, PocketSphinx) plus an optional local-LLM
+  (Ollama) clean-up / summary step. Everything runs without a cloud API.
 
-## Prerequisites
+Everything runs in Docker with ffmpeg bundled — no host setup beyond Docker.
 
-- Docker
-- Docker Compose
-- Python 3.x (if running outside Docker)
-
-## Directory Structure
-
-paved/  
-├── Dockerfile: Defines the Docker container and its dependencies.  
-├── docker-compose.yml: Docker Compose configuration file.  
-├── paved.py: Main Python script for video downloading and transcription.  
-├── data/: Directory for storing downloaded or converted audio files.  
-└── README.md: This documentation.  
-
-## Getting Started
-
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/williamblair333/paved.git
-    cd paved
-    ```
-
-2. **Build and start the Docker container**:
-    ```bash
-    docker-compose up --build
-    ```
-
-## 3. **Run the script with arguments using Docker Compose**
-
-- For online mode:
-    ```bash
-    docker-compose exec <container_name> python paved.py -m online -p 'https://youtube.com/watch?v=example'
-    ```
-  
-- For offline mode:
-    ```bash
-    docker-compose exec <container_name> python paved.py -m offline -p '/path/to/local/audio.wav'
-    ```
-
-- To save text to a custom directory and suppress console output:
-    ```bash
-    docker-compose exec <container_name> python paved.py -m online -p 'https://youtube.com/watch?v=example' --output '/custom/output/file.txt' --print-console false
-    ```
-
-## 4. **Output**
-
-Transcribed text will be printed in the terminal unless the `--print-console false` argument is used.
-
-## Command-Line Arguments
-
-Use the following command-line arguments for flexible operation:
-
-- `-m` or `--mode`: Mode of operation (`online` for online video URLs, `offline` for local audio or video files).
-  
-- `-p` or `--path`: URL for `online` mode or local file path for `offline` mode.
-  
-- `--output`: Custom output path for the transcribed text file. Default is 'local_files/output'.
-  
-- `--print-console`: Whether or not to print the transcribed text to the console. Use 'true' to print or 'false' to suppress. Default is 'true'.
-  
-### For example:
+## Quick start
 
 ```bash
-python paved.py -m online -p 'https://youtube.com/watch?v=example' --output '/custom/output/file.txt' --print-console false
+git clone https://github.com/williamblair333/paved.git
+cd paved
+docker compose build           # builds the image (ffmpeg + all engines)
+mkdir -p data                  # put your video files here; mounted at /data
+```
 
-## TODO
+### Repair
 
-- [ ] Implement error handling for unsupported video URLs or restricted content.
-- [ ] Integrate with a database to store transcriptions.
-- [ ] Pocketsphinx needs tweaking or something. 
-- [ ] Code structure is a bit messy and needs streamlining
-- [ ] Argument to allow user to specify filename
+```bash
+# Diagnose only, write nothing:
+docker compose run --rm app repair /data/broken.mp4 --dry-run
+
+# Repair one file (output written alongside as <name>.repaired.mp4):
+docker compose run --rm app repair /data/broken.mp4
+
+# Repair an entire folder (e.g. a mounted USB copy):
+docker compose run --rm app repair /data --recursive
+```
+
+The repair pipeline: **probe → copy → apply strategies (on the copy) → decode-verify → report.**
+The source file is **never modified** — every fix runs on a copy and the result
+must pass a full ffmpeg decode before success is claimed. When a salvage is
+**lossy** (e.g. an unrecoverable damaged head region), the report says exactly
+what was lost. It never claims a lossy salvage is lossless.
+
+Fault strategies, tried cheapest-first:
+
+| Strategy | Fixes | Lossy? |
+|---|---|---|
+| `reconstruct_mdat_header` | missing/zeroed `mdat` box header | no |
+| `remux_faststart` | index/streaming quirks | no |
+| `salvage_playable_span` | damaged/unflushed head region | yes (reported) |
+| `transcode_rescue` | otherwise-undecodable streams | yes (re-encode) |
+
+### Transcribe
+
+```bash
+# Best available engine (defaults to faster-whisper), writes <name>.txt + .json:
+docker compose run --rm app transcribe /data/talk.mp4
+
+# Pick an engine and model:
+docker compose run --rm app transcribe /data/talk.mp4 --engine vosk
+docker compose run --rm app transcribe /data/talk.mp4 --engine faster-whisper --model small
+
+# Add a local-LLM post-step (needs Ollama running on the host):
+docker compose run --rm app transcribe /data/talk.mp4 --llm clean
+docker compose run --rm app transcribe /data/talk.mp4 --llm summary
+
+# See engine availability:
+docker compose run --rm app engines
+```
+
+The LLM step auto-detects Ollama at `host.docker.internal:11434`. If it's not
+running, transcription still succeeds and emits the raw transcript with a warning —
+it never fails the run. Default model `llama3.2:3b` (set `PAVED_LLM_MODEL`).
+
+## Running on the host (without Docker)
+
+```bash
+pip install -e ".[all,ffmpeg]"   # or pick specific extras
+paved repair /path/to/video.mp4
+paved transcribe /path/to/video.mp4 --engine faster-whisper
+```
+
+## CLI reference
+
+```
+paved probe       PATH [--json]
+paved repair      PATH [--out DIR] [--dry-run] [--recursive] [--json]
+paved transcribe  PATH [--engine E] [--model M] [--llm off|clean|summary] [--out DIR] [--recursive]
+paved engines
+```
+
+`PATH` may be a single file or a directory (use `--recursive` to descend).
+Video extensions handled: mp4, mov, m4v, mkv, webm, avi.
+
+## Design
+
+See [`docs/superpowers/specs/2026-06-18-paved-toolkit-design.md`](docs/superpowers/specs/2026-06-18-paved-toolkit-design.md).
+
+## License
+
+MIT

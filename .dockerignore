@@ -1,0 +1,14 @@
+.git
+.gitignore
+data/*
+!data/.gitkeep
+local_files
+**/__pycache__
+*.pyc
+.pytest_cache
+.ffvenv
+docs
+tests
+*.mp4
+*.mov
+*.mkv
