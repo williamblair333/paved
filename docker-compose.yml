@@ -1,11 +1,15 @@
-version: '3'
 services:
   app:
-    command: tail -f /dev/null
     build: .
+    # Mount a work directory into the container at /data, then run e.g.:
+    #   docker compose run --rm app probe /data/broken.mp4
+    #   docker compose run --rm app repair /data --recursive
+    #   docker compose run --rm app transcribe /data/talk.mp4 --llm clean
+    #   docker compose run --rm app engines
     volumes:
+      - ./data:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./local_files:/app/local_files
-      - ./local_files/output:/app/local_files/output
-      - ./data:/data
+    # Lets the container reach a host-run Ollama at host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
