@@ -60,7 +60,7 @@ def cmd_repair(args) -> int:
 
 def cmd_transcribe(args) -> int:
     from paved import transcribe as tr
-    from paved.llm import ollama
+    from paved.llm import process as llm_process
 
     targets = _iter_media(args.path, args.recursive)
     if not targets:
@@ -77,7 +77,12 @@ def cmd_transcribe(args) -> int:
         text = t.text
         llm_warn = ""
         if args.llm != "off":
-            r = ollama.process(text, mode=args.llm)
+            r = llm_process(
+                text,
+                mode=args.llm,
+                provider=args.llm_provider,
+                model=args.llm_model,
+            )
             text = r.text
             if not r.ok:
                 llm_warn = r.warning
@@ -129,6 +134,7 @@ def _iter_media(path: str, recursive: bool):
 
 
 def build_parser() -> argparse.ArgumentParser:
+    from paved.llm import PROVIDER_NAMES
     p = argparse.ArgumentParser(
         prog="paved",
         description="PAVED — repair broken videos and transcribe speech (offline).",
@@ -155,6 +161,11 @@ def build_parser() -> argparse.ArgumentParser:
     pt.add_argument("--model", help="engine model (default: engine's default)")
     pt.add_argument("--llm", choices=["off", "clean", "summary"], default="off",
                     help="optional local-LLM post-step (default: off)")
+    pt.add_argument("--llm-provider", dest="llm_provider",
+                    choices=PROVIDER_NAMES, default=None,
+                    help="LLM provider (default: PAVED_LLM_PROVIDER env var, or 'ollama')")
+    pt.add_argument("--llm-model", dest="llm_model", default=None,
+                    help="model override for chosen LLM provider")
     pt.add_argument("--out", help="output directory (default: alongside source)")
     pt.add_argument("--recursive", action="store_true")
     pt.set_defaults(func=cmd_transcribe)
