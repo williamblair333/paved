@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — 2026-06-25
+
+### Changed
+- **Readme.md**: full marketing-oriented rewrite — centered hero, badges, "Why PAVED?"
+  benefit table, engine comparison table, and new sections (Supported Formats incl. audio
+  extensions, How It Works, Configuration env-var table, Project Layout, Testing, Roadmap,
+  FAQ, Contributing). All claims grounded in the actual code; no behavior changed.
+- **GitHub About**: refreshed the repo description (was the stale "Python Audio Video
+  Extractor in Docker") and added 20 discovery topics (video-repair, transcription,
+  faster-whisper, offline-first, docker, ollama, iso-bmff, …).
+
 ## 1.0.0 — 2026-06-18
 
 Complete rewrite. PAVED is now a video **repair + transcription** toolkit.
