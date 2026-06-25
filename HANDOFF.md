@@ -1,6 +1,14 @@
 # HANDOFF
 
-## Current State (2026-06-22)
+## Current State (2026-06-25)
+
+Docs-only session on top of v1.0.0: `Readme.md` was rewritten into a heavier
+"advertising" README (badges, benefit tables, engine comparison, formats, config,
+roadmap, FAQ) — no code or behavior changed, every claim is grounded in the source.
+The GitHub **About** description and **topics** were also refreshed for discoverability.
+Shipped via PR → merge to `main`. Code state is unchanged from the v1.0.0 baseline below.
+
+## Prior State (2026-06-22)
 
 PAVED was revived from a broken stub into a working, Dockerized video toolkit
 (v1.0.0). Two modes ship:
