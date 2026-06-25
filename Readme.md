@@ -12,12 +12,12 @@ No API keys. No uploads. No telemetry. Your media never leaves your machine.
 
 <br>
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
 ![ffmpeg](https://img.shields.io/badge/ffmpeg-bundled-007808?logo=ffmpeg&logoColor=white)
 ![Offline](https://img.shields.io/badge/cloud-not%20required-success)
-![Tests](https://img.shields.io/badge/tests-21%2F21%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-46%2F46%20passing-brightgreen)
 ![Version](https://img.shields.io/badge/version-1.0.0-orange)
 
 <br>
@@ -48,7 +48,7 @@ and tells you the truth when it can't.
 | 🔬 **Honest about loss** | Lossless fixes are tried first. A lossy salvage reports *exactly* what was lost — it never lies about a clean recovery. |
 | ✅ **Verifies before it claims success** | Every repaired file must pass a full ffmpeg decode before PAVED calls it fixed. |
 | 🔌 **Four transcription engines, swappable** | faster-whisper, whisper.cpp, Vosk, PocketSphinx — auto-selected or pick your own. |
-| 🤖 **Optional local-LLM polish** | Pipe transcripts through Ollama for cleanup or summaries — and it *fail-softs* if Ollama isn't running. |
+| 🤖 **Optional LLM polish** | Post-process transcripts through any of 8 providers — Ollama (local), Claude, Gemini, OpenAI, DeepSeek, Qwen, or any OpenAI-compatible endpoint. Always fail-soft. |
 | 🐳 **One-command Docker** | ffmpeg + every engine baked into the image. Zero host setup. |
 | 📴 **Truly offline** | No accounts, no keys, no network calls in the hot path. |
 | 🧩 **Scriptable** | `--json` on every command for clean automation and CI pipelines. |
@@ -164,18 +164,39 @@ per-segment timestamps where the engine provides them).
 
 ---
 
-## 🤖 Local-LLM Polish
+## 🤖 LLM Polish
 
-Optionally pipe a raw transcript through a **local** Ollama model for cleanup or summarization:
+Optionally post-process a raw transcript through any of **8 LLM providers** for cleanup or summarization:
 
 ```bash
-docker compose run --rm app transcribe /data/talk.mp4 --llm clean     # tidy punctuation/casing
-docker compose run --rm app transcribe /data/talk.mp4 --llm summary   # condensed summary
+# Local (default — no keys needed)
+docker compose run --rm app transcribe /data/talk.mp4 --llm clean
+
+# Cloud providers
+ANTHROPIC_API_KEY=sk-...  paved transcribe talk.mp4 --llm clean  --llm-provider anthropic
+GOOGLE_API_KEY=...        paved transcribe talk.mp4 --llm summary --llm-provider google
+DEEPSEEK_API_KEY=...      paved transcribe talk.mp4 --llm clean  --llm-provider deepseek
+
+# Your own Claude subscription (no API key — uses local claude CLI session)
+paved transcribe talk.mp4 --llm clean --llm-provider claude-cli
 ```
 
-The LLM step auto-detects Ollama at `host.docker.internal:11434`. If Ollama isn't running,
-**transcription still succeeds** and emits the raw transcript with a warning — it *never* fails
-the run. Default model is `llama3.2:3b` (override with `PAVED_LLM_MODEL`).
+| Provider | `--llm-provider` | Auth | Default model |
+|---|---|---|---|
+| Ollama (local) | `ollama` *(default)* | none | `llama3.2:3b` |
+| Anthropic Claude | `anthropic` | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6` |
+| Claude CLI (subscription) | `claude-cli` | OAuth session | CLI default |
+| Google Gemini | `google` | `GOOGLE_API_KEY` | `gemini-2.0-flash` |
+| OpenAI | `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| DeepSeek | `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-chat` |
+| Qwen / Alibaba | `qwen` | `QWEN_API_KEY` | `qwen-plus` |
+| Any OpenAI-compat | `openai-compat` | `PAVED_LLM_API_KEY` + `PAVED_LLM_BASE_URL` | set `PAVED_LLM_MODEL` |
+
+The LLM step is always **fail-soft**: if the provider is unreachable, the key is missing, or the
+call fails, transcription still succeeds and emits the raw transcript with a warning.
+
+Set the default provider via `PAVED_LLM_PROVIDER` to avoid typing `--llm-provider` every time.
+All providers fall back to `PAVED_LLM_API_KEY` if a provider-specific key isn't set.
 
 ---
 
@@ -209,7 +230,9 @@ Pick only what you need via optional extras:
 ```text
 paved probe       PATH [--json]
 paved repair      PATH [--out DIR] [--dry-run] [--recursive] [--json]
-paved transcribe  PATH [--engine E] [--model M] [--llm off|clean|summary] [--out DIR] [--recursive]
+paved transcribe  PATH [--engine E] [--model M] [--llm off|clean|summary]
+                       [--llm-provider PROVIDER] [--llm-model MODEL]
+                       [--out DIR] [--recursive]
 paved engines
 paved --version
 ```
@@ -238,7 +261,7 @@ PAVED is a small, dependency-light Python package with a clean separation of con
 - **`repair`** — orchestrates the copy → strategy → decode-verify → report loop.
 - **`transcribe`** — an engine registry that lazy-imports each backend, so one missing optional
   package never breaks the others.
-- **`llm`** — the fail-soft Ollama post-processor.
+- **`llm`** — fail-soft multi-provider LLM post-processor (8 providers, stdlib HTTP only).
 - **`ffmpeg`** — a thin, configurable wrapper around the system (or bundled) ffmpeg binary.
 
 Every transcription engine runs **fully offline**, and the repair path makes **no network calls
@@ -250,8 +273,16 @@ at all**.
 
 | Environment variable | Purpose | Default |
 |---|---|---|
-| `PAVED_LLM_MODEL` | Ollama model for `--llm clean/summary` | `llama3.2:3b` |
-| `OLLAMA_HOST` | Ollama endpoint (set in the image) | `http://host.docker.internal:11434` |
+| `PAVED_LLM_PROVIDER` | Default LLM provider | `ollama` |
+| `PAVED_LLM_MODEL` | Model override for chosen provider | provider default |
+| `PAVED_LLM_API_KEY` | Fallback API key (all cloud providers) | — |
+| `ANTHROPIC_API_KEY` | Anthropic-specific key | — |
+| `GOOGLE_API_KEY` | Google Gemini key | — |
+| `OPENAI_API_KEY` | OpenAI key | — |
+| `DEEPSEEK_API_KEY` | DeepSeek key | — |
+| `QWEN_API_KEY` | Qwen / Alibaba key | — |
+| `PAVED_LLM_BASE_URL` | Base URL for `openai-compat` provider | — |
+| `OLLAMA_HOST` | Ollama endpoint | `http://host.docker.internal:11434` |
 | `PAVED_FFMPEG` | Path to a specific ffmpeg binary | auto-detected / bundled |
 
 The Compose service mounts `./data → /data` and wires `host.docker.internal` so the container
@@ -274,8 +305,10 @@ paved/
 │   ├── transcribe/
 │   │   ├── base.py         # Engine ABC, audio extraction, Transcript model
 │   │   └── engines.py      # faster-whisper / whisper.cpp / Vosk / PocketSphinx
-│   └── llm/ollama.py       # fail-soft local-LLM post-step
-├── tests/                  # 21 unit tests — no ffmpeg/models/network needed
+│   └── llm/                # fail-soft multi-provider LLM post-step
+│       ├── _base.py        #   LLMResult, PROMPTS, LLMProvider ABC
+│       └── _providers.py   #   8 providers (Ollama, Anthropic, claude-cli, Gemini, OpenAI, DeepSeek, Qwen, openai-compat)
+├── tests/                  # 46 unit tests — no ffmpeg/models/network needed
 ├── docs/                   # design spec
 ├── Dockerfile              # native deps + ffmpeg FIRST, then pip
 ├── docker-compose.yml
@@ -291,9 +324,9 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The suite (**21/21 passing**) covers the box walker, fault classification, `mdat`
-reconstruction, the engine registry/selection logic, and CLI parsing — and needs **no ffmpeg,
-no models, and no network**, so it runs anywhere in seconds.
+The suite (**46/46 passing**) covers the box walker, fault classification, `mdat`
+reconstruction, the engine registry/selection logic, all 8 LLM providers (mocked), and CLI
+parsing — and needs **no ffmpeg, no models, and no network**, so it runs anywhere in seconds.
 
 ---
 
@@ -311,8 +344,9 @@ v1.0 is complete and merged. Candidate work for future releases:
 ## ❓ FAQ
 
 **Does anything get uploaded to the cloud?**
-No. Every engine runs locally and the repair path makes no network calls. The only optional
-network hop is to a **local** Ollama instance you control.
+The repair path and all transcription engines make **zero network calls**. The optional LLM
+post-step defaults to a local Ollama instance; cloud providers are opt-in and require you to
+supply your own API key.
 
 **Will repair re-encode and degrade my video?**
 Only as a last resort, and only when nothing lossless works — and the report tells you when that
@@ -338,6 +372,8 @@ Extending PAVED is intentionally easy:
   in `FAULT_STRATEGIES`.
 - **New transcription engine** → subclass `Engine` in `src/paved/transcribe/engines.py` and
   append it to `ALL_ENGINES`.
+- **New LLM provider** → subclass `LLMProvider` in `src/paved/llm/_providers.py` and register
+  it in `src/paved/llm/__init__.py`'s `_PROVIDERS` dict.
 
 Run `pytest` before opening a PR. See the full design spec in
 [`docs/superpowers/specs/2026-06-18-paved-toolkit-design.md`](docs/superpowers/specs/2026-06-18-paved-toolkit-design.md).
@@ -346,7 +382,7 @@ Run `pytest` before opening a PR. See the full design spec in
 
 ## 📜 License
 
-[MIT](LICENSE) © William Blair
+[AGPL-3.0](LICENSE) © William Blair
 
 <div align="center">
 <sub>Built for people who'd rather recover the footage than re-shoot it.</sub>
