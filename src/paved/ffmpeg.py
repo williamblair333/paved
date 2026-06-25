@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Locate and invoke ffmpeg/ffprobe.
 
 Resolution order for each binary:

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Structural probe + fault classification for video containers.
 
 Classifies a file into one of a known set of faults using only byte-level

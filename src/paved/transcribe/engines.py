@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Concrete transcription engines. All run fully offline.
 
 Each engine lazy-imports its heavy dependency inside is_available()/transcribe()

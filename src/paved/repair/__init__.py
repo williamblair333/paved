@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Repair pipeline: probe → copy → apply strategies (on copy) → decode-verify → report.
 
 Safety invariant: the source file is opened read-only and copied before any byte

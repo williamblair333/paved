@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Engine registry, default selection, and the transcribe pipeline."""
 from __future__ import annotations
 
