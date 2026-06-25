@@ -384,6 +384,3 @@ Run `pytest` before opening a PR. See the full design spec in
 
 [AGPL-3.0](LICENSE) © William Blair
 
-<div align="center">
-<sub>Built for people who'd rather recover the footage than re-shoot it.</sub>
-</div>
