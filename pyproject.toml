@@ -8,7 +8,8 @@ version = "1.0.0"
 description = "Dockerized video toolkit: repair broken containers and transcribe speech (offline)."
 readme = "Readme.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "AGPL-3.0-only" }
+license-files = ["LICENSE"]
 authors = [{ name = "William Blair" }]
 
 # Core deps only. Transcription engines are optional extras so the repair-only
