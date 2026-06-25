@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Minimal ISO Base Media (MP4/MOV) box walker.
 
 Pure-Python, no decoder. Walks the top-level box list and can recurse into

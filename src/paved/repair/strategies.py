@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Repair strategies. Each takes a working-copy path + Diagnosis and returns a
 StrategyOutcome. Strategies operate ONLY on the working copy, never the source.
 

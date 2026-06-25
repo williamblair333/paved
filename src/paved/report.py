@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Structured results for probe/repair, with human and JSON rendering."""
 from __future__ import annotations
 

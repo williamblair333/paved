@@ -24,3 +24,4 @@ data/output/*
 !data/output/.gitkeep
 local_files/*
 !local_files/.gitkeep
+.superpowers/

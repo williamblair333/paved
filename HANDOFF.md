@@ -2,11 +2,19 @@
 
 ## Current State (2026-06-25)
 
-Docs-only session on top of v1.0.0: `Readme.md` was rewritten into a heavier
-"advertising" README (badges, benefit tables, engine comparison, formats, config,
-roadmap, FAQ) — no code or behavior changed, every claim is grounded in the source.
-The GitHub **About** description and **topics** were also refreshed for discoverability.
-Shipped via PR → merge to `main`. Code state is unchanged from the v1.0.0 baseline below.
+Two sessions today on top of v1.0.0:
+
+**Session 2 (this session)** — license + multi-provider LLM:
+- License changed MIT → AGPL-3.0-only. `LICENSE` created, `pyproject.toml` updated, SPDX
+  headers on all 13 source files.
+- `src/paved/llm/` fully refactored: `ollama.py` deleted, replaced by `_base.py` (types/ABC),
+  `_providers.py` (8 providers), `__init__.py` (router). CLI gains `--llm-provider` and
+  `--llm-model` flags.
+- 46/46 tests passing. All commits on `main`, not yet pushed to origin.
+- **Single most important thing**: `from paved.llm import process, PROVIDER_NAMES, LLMResult`
+  is the new public API. `from paved.llm import ollama` no longer works — it's gone.
+
+**Session 1** — docs-only README marketing rewrite. GitHub About updated.
 
 ## Prior State (2026-06-22)
 

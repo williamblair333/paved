@@ -29,6 +29,30 @@ def test_transcribe_llm_choices():
         cli.build_parser().parse_args(["transcribe", "/x", "--llm", "bogus"])
 
 
+def test_transcribe_llm_provider_choices():
+    from paved.cli import build_parser
+    from paved.llm import PROVIDER_NAMES
+    p = build_parser()
+    # verify all provider names are valid choices
+    for name in PROVIDER_NAMES:
+        args = p.parse_args(["transcribe", "foo.mp4", "--llm-provider", name])
+        assert args.llm_provider == name
+
+
+def test_transcribe_llm_provider_default_is_none():
+    from paved.cli import build_parser
+    p = build_parser()
+    args = p.parse_args(["transcribe", "foo.mp4"])
+    assert args.llm_provider is None  # router falls back to env/ollama
+
+
+def test_transcribe_llm_model_flag():
+    from paved.cli import build_parser
+    p = build_parser()
+    args = p.parse_args(["transcribe", "foo.mp4", "--llm-model", "gpt-4o"])
+    assert args.llm_model == "gpt-4o"
+
+
 def test_engines_command_runs(capsys, monkeypatch):
     # Force a known availability so output is deterministic.
     for e in __import__("paved.transcribe", fromlist=["ALL_ENGINES"]).ALL_ENGINES:

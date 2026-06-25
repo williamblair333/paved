@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Transcription engine interface and shared audio extraction."""
 from __future__ import annotations
 

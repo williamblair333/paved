@@ -1,6 +1,27 @@
 # Changelog
 
-## Unreleased — 2026-06-25
+## Unreleased — 2026-06-25 (session 2 — license + multi-provider LLM)
+
+### Changed
+- **License**: MIT → AGPL-3.0-only. `LICENSE` file created (canonical FSF text). `pyproject.toml`
+  updated with `license = { text = "AGPL-3.0-only" }` and `license-files = ["LICENSE"]`.
+- **`src/paved/llm/`**: Replaced single-provider `ollama.py` with a three-module design —
+  `_base.py` (LLMResult, PROMPTS, LLMProvider ABC), `_providers.py` (8 providers), `__init__.py`
+  (router with `process()` and `PROVIDER_NAMES`). Zero new runtime dependencies — stdlib HTTP only.
+
+### Added
+- **8 LLM providers**: `ollama` (default), `anthropic`, `claude-cli` (subscription, no API key),
+  `google`, `openai`, `deepseek`, `qwen`, `openai-compat` (generic escape hatch).
+- **`--llm-provider`** CLI flag on `paved transcribe` (also `PAVED_LLM_PROVIDER` env var).
+- **`--llm-model`** CLI flag on `paved transcribe` (also `PAVED_LLM_MODEL` env var, pre-existing).
+- **SPDX headers** (`# SPDX-License-Identifier: AGPL-3.0-only`) on all 13 non-stub source files.
+- 25 new tests (46 total, all passing). New: `tests/test_llm_base.py`,
+  `tests/test_llm_providers.py`, `tests/test_llm_router.py`.
+
+### Removed
+- `src/paved/llm/ollama.py` — fully migrated to `_providers.py::OllamaProvider`.
+
+## Unreleased — 2026-06-25 (session 1 — docs)
 
 ### Changed
 - **Readme.md**: full marketing-oriented rewrite — centered hero, badges, "Why PAVED?"
