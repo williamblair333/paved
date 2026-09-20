@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Dockerized video toolkit: repair broken containers and transcribe speech (offline)."
 readme = "Readme.md"
 requires-python = ">=3.10"
-license = { text = "AGPL-3.0-only" }
+license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 authors = [{ name = "William Blair" }]
 
